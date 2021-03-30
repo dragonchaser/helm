@@ -29,6 +29,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
+	github.com/rancher-sandbox/gofilecache v0.0.0-20210319092827-accbd4318eb0
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.1.3
@@ -36,6 +37,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6
 	golang.org/x/term v0.0.0-20201117132131-f5c789dd3221
 	k8s.io/api v0.20.4
 	k8s.io/apiextensions-apiserver v0.20.4

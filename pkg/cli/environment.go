@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rancher-sandbox/gofilecache"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
@@ -68,6 +69,8 @@ type EnvSettings struct {
 	PluginsDirectory string
 	// MaxHistory is the max release history maintained.
 	MaxHistory int
+	// Downloadcache for the chart downloader
+	DownloadCache gofilecache.Cache
 }
 
 func New() *EnvSettings {
@@ -84,6 +87,7 @@ func New() *EnvSettings {
 		RegistryConfig:   envOr("HELM_REGISTRY_CONFIG", helmpath.ConfigPath("registry.json")),
 		RepositoryConfig: envOr("HELM_REPOSITORY_CONFIG", helmpath.ConfigPath("repositories.yaml")),
 		RepositoryCache:  envOr("HELM_REPOSITORY_CACHE", helmpath.CachePath("repository")),
+		DownloadCache:    *gofilecache.InitCache(envOr("HELM_DOWNLOAD_CACHE", helmpath.CachePath("downloads"))),
 	}
 	env.Debug, _ = strconv.ParseBool(os.Getenv("HELM_DEBUG"))
 

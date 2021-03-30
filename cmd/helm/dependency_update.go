@@ -66,6 +66,7 @@ func newDependencyUpdateCmd(cfg *action.Configuration, out io.Writer) *cobra.Com
 				RegistryClient:   cfg.RegistryClient,
 				RepositoryConfig: settings.RepositoryConfig,
 				RepositoryCache:  settings.RepositoryCache,
+				DownloadCache:    settings.DownloadCache,
 				Debug:            settings.Debug,
 			}
 			if client.Verify {

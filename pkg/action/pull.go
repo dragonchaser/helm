@@ -87,6 +87,7 @@ func (p *Pull) Run(chartRef string) (string, error) {
 		},
 		RepositoryConfig: p.Settings.RepositoryConfig,
 		RepositoryCache:  p.Settings.RepositoryCache,
+		DownloadCache:    p.Settings.DownloadCache,
 	}
 
 	if strings.HasPrefix(chartRef, "oci://") {

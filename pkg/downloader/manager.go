@@ -32,6 +32,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/pkg/errors"
+	"github.com/rancher-sandbox/gofilecache"
 	"sigs.k8s.io/yaml"
 
 	"helm.sh/helm/v3/internal/experimental/registry"
@@ -76,6 +77,7 @@ type Manager struct {
 	RegistryClient   *registry.Client
 	RepositoryConfig string
 	RepositoryCache  string
+	DownloadCache    gofilecache.Cache
 }
 
 // Build rebuilds a local charts directory from a lockfile.
@@ -330,6 +332,7 @@ func (m *Manager) downloadAll(deps []*chart.Dependency) error {
 			RepositoryConfig: m.RepositoryConfig,
 			RepositoryCache:  m.RepositoryCache,
 			Getters:          m.Getters,
+			DownloadCache:    m.DownloadCache,
 			Options: []getter.Option{
 				getter.WithBasicAuth(username, password),
 			},
