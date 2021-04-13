@@ -224,6 +224,7 @@ func runInstall(args []string, client *action.Install, valueOpts *values.Options
 					RepositoryConfig: settings.RepositoryConfig,
 					RepositoryCache:  settings.RepositoryCache,
 					DownloadCache:    settings.DownloadCache,
+					ProvenanceCache:  settings.ProvenanceCache,
 					Debug:            settings.Debug,
 				}
 				if err := man.Update(); err != nil {

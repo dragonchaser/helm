@@ -71,6 +71,8 @@ type EnvSettings struct {
 	MaxHistory int
 	// Downloadcache for the chart downloader
 	DownloadCache gofilecache.Cache
+	// Provanencecache for downloaded provenance files
+	ProvenanceCache gofilecache.Cache
 }
 
 func New() *EnvSettings {
@@ -88,6 +90,7 @@ func New() *EnvSettings {
 		RepositoryConfig: envOr("HELM_REPOSITORY_CONFIG", helmpath.ConfigPath("repositories.yaml")),
 		RepositoryCache:  envOr("HELM_REPOSITORY_CACHE", helmpath.CachePath("repository")),
 		DownloadCache:    *gofilecache.InitCache(envOr("HELM_DOWNLOAD_CACHE", helmpath.CachePath("downloads"))),
+		ProvenanceCache:  *gofilecache.InitCache(envOr("HELM_PROVENANCE_CACHE", helmpath.CachePath("provenance"))),
 	}
 	env.Debug, _ = strconv.ParseBool(os.Getenv("HELM_DEBUG"))
 

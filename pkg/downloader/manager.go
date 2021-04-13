@@ -78,6 +78,7 @@ type Manager struct {
 	RepositoryConfig string
 	RepositoryCache  string
 	DownloadCache    gofilecache.Cache
+	ProvenanceCache  gofilecache.Cache
 }
 
 // Build rebuilds a local charts directory from a lockfile.
@@ -333,6 +334,7 @@ func (m *Manager) downloadAll(deps []*chart.Dependency) error {
 			RepositoryCache:  m.RepositoryCache,
 			Getters:          m.Getters,
 			DownloadCache:    m.DownloadCache,
+			ProvenanceCache:  m.ProvenanceCache,
 			Options: []getter.Option{
 				getter.WithBasicAuth(username, password),
 			},

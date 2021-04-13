@@ -95,6 +95,7 @@ func newPackageCmd(out io.Writer) *cobra.Command {
 						RepositoryConfig: settings.RepositoryConfig,
 						RepositoryCache:  settings.RepositoryCache,
 						DownloadCache:    settings.DownloadCache,
+						ProvenanceCache:  settings.ProvenanceCache,
 					}
 
 					if err := downloadManager.Update(); err != nil {

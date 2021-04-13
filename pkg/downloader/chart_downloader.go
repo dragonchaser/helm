@@ -16,8 +16,10 @@ limitations under the License.
 package downloader
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -75,6 +77,8 @@ type ChartDownloader struct {
 	RepositoryCache  string
 	// DownloadCache
 	DownloadCache gofilecache.Cache
+	// ProvenanceCache
+	ProvenanceCache gofilecache.Cache
 }
 
 // DownloadTo retrieves a chart. Depending on the settings, it may also download a provenance file.
@@ -89,6 +93,7 @@ type ChartDownloader struct {
 // Returns a string path to the location where the file was downloaded and a verification
 // (if provenance was verified), or an error if something bad happened.
 func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *provenance.Verification, error) {
+	destfile := ""
 	u, digest, err := c.ResolveChartVersionWithDigest(ref, version)
 	if err != nil {
 		return "", nil, err
@@ -108,47 +113,78 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 		fileName, _, _ := c.DownloadCache.GetFile(aID)
 		if fileName != "" {
 			fmt.Fprintf(os.Stdout, "cache hit for %s using %s\n", ref, fileName)
-			return fileName, nil, nil
+			destfile = fileName
 		}
 	}
+	if destfile != "" {
+		data, err := g.Get(u.String(), c.Options...)
+		if err != nil {
+			return "", nil, err
+		}
 
-	data, err := g.Get(u.String(), c.Options...)
-	if err != nil {
-		return "", nil, err
+		name := filepath.Base(u.Path)
+		if u.Scheme == "oci" {
+			name = fmt.Sprintf("%s-%s.tgz", name, version)
+		}
+
+		destfile := filepath.Join(dest, name)
+
+		f, err := os.Open(destfile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Could not access the destination chart file %e", err)
+		}
+		defer f.Close()
+		c.DownloadCache.Put(aID, f)
+
+		if err := fileutil.AtomicWriteFile(destfile, data, 0644); err != nil {
+			return destfile, nil, err
+		}
 	}
-
-	name := filepath.Base(u.Path)
-	if u.Scheme == "oci" {
-		name = fmt.Sprintf("%s-%s.tgz", name, version)
-	}
-
-	destfile := filepath.Join(dest, name)
-
-	f, err := os.Open(destfile)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not access the cache %e", err)
-	}
-	defer f.Close()
-	c.DownloadCache.Put(aID, f)
-
-	if err := fileutil.AtomicWriteFile(destfile, data, 0644); err != nil {
-		return destfile, nil, err
-	}
-
 	// If provenance is requested, verify it.
 	ver := &provenance.Verification{}
+	cacheHit := false
 	if c.Verify > VerifyNever {
-		body, err := g.Get(u.String() + ".prov")
-		if err != nil {
-			if c.Verify == VerifyAlways {
-				return destfile, ver, errors.Errorf("failed to fetch provenance %q", u.String()+".prov")
+		var body *bytes.Buffer
+		if digest != "" {
+			// try to fetch the provenance file from cache
+			provCacheFile, _, err := c.ProvenanceCache.GetFile(aID)
+			if err == nil {
+				data, err := ioutil.ReadFile(provCacheFile)
+				if err == nil {
+					body = bytes.NewBuffer(data)
+					cacheHit = true
+					fmt.Fprintf(c.Out, "file has been read from cache")
+				} else {
+					fmt.Fprintf(c.Out, "File in cache found but could not be read, trying to get it from remote.")
+				}
+			} else {
+				fmt.Fprintf(c.Out, "File not found in provenance cache.")
 			}
-			fmt.Fprintf(c.Out, "WARNING: Verification not found for %s: %s\n", ref, err)
-			return destfile, ver, nil
 		}
-		provfile := destfile + ".prov"
-		if err := fileutil.AtomicWriteFile(provfile, body, 0644); err != nil {
-			return destfile, nil, err
+		if !cacheHit {
+			// fetch the provenance file from remote
+			body, err = g.Get(u.String() + ".prov")
+			if err != nil {
+				if c.Verify == VerifyAlways {
+					return destfile, ver, errors.Errorf("failed to fetch provenance %q", u.String()+".prov")
+				}
+				fmt.Fprintf(c.Out, "WARNING: Verification not found for %s: %s\n", ref, err)
+				return destfile, ver, nil
+			}
+		}
+
+		if !cacheHit {
+			// write the provenance file to the provenance cache
+			tmp, err := ioutil.TempFile(os.TempDir(), "prov-")
+			if err != nil {
+				fmt.Fprintf(c.Out, "Could not store temporary provenance file")
+			}
+			defer tmp.Close()
+			c.ProvenanceCache.Put(aID, tmp)
+			provfile := destfile + ".prov"
+			if err := fileutil.AtomicWriteFile(provfile, body, 0644); err != nil {
+				return destfile, nil, err
+			}
 		}
 
 		if c.Verify != VerifyLater {
