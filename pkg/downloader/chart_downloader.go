@@ -116,7 +116,7 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 			destfile = fileName
 		}
 	}
-	if destfile != "" {
+	if destfile == "" {
 		data, err := g.Get(u.String(), c.Options...)
 		if err != nil {
 			return "", nil, err
