@@ -62,7 +62,7 @@ func TestResolveChartRef(t *testing.T) {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}
@@ -109,12 +109,12 @@ func TestResolveChartOpts(t *testing.T) {
 		},
 	}
 
-	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}
@@ -219,12 +219,12 @@ func TestDownloadTo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}
@@ -284,12 +284,12 @@ func TestDownloadTo_TLS(t *testing.T) {
 	repoConfig := filepath.Join(srv.Root(), "repositories.yaml")
 	repoCache := srv.Root()
 
-	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}
@@ -345,12 +345,12 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}
@@ -386,12 +386,12 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 }
 
 func TestScanReposForURL(t *testing.T) {
-	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary download cache directory")
 	}
 
-	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
 	if err != nil {
 		t.Errorf("Could not create temporary provenance cache directory")
 	}

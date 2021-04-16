@@ -93,7 +93,7 @@ type ChartDownloader struct {
 // Returns a string path to the location where the file was downloaded and a verification
 // (if provenance was verified), or an error if something bad happened.
 func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *provenance.Verification, error) {
-	destfile := ""
+	var data *bytes.Buffer
 	u, digest, err := c.ResolveChartVersionWithDigest(ref, version)
 	if err != nil {
 		return "", nil, err
@@ -108,26 +108,31 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 		return "", nil, err
 	}
 
+	name := filepath.Base(u.Path)
+	if u.Scheme == "oci" {
+		name = fmt.Sprintf("%s-%s.tgz", name, version)
+	}
+
+	destfile := filepath.Join(dest, name)
+
 	// we ignore the error here, this is not relevant, error means no entry in the cache
 	if digest != "" {
 		fileName, _, _ := c.DownloadCache.GetFile(aID)
 		if fileName != "" {
 			fmt.Fprintf(os.Stdout, "cache hit for %s using %s\n", ref, fileName)
-			destfile = fileName
+			raw, err := ioutil.ReadFile(fileName)
+			if err != nil {
+				fmt.Fprintf(os.Stdout, "could not read %s from download cache", fileName)
+			} else {
+				data = bytes.NewBuffer(raw)
+			}
 		}
 	}
-	if destfile == "" {
-		data, err := g.Get(u.String(), c.Options...)
+	if data == nil {
+		data, err = g.Get(u.String(), c.Options...)
 		if err != nil {
 			return "", nil, err
 		}
-
-		name := filepath.Base(u.Path)
-		if u.Scheme == "oci" {
-			name = fmt.Sprintf("%s-%s.tgz", name, version)
-		}
-
-		destfile := filepath.Join(dest, name)
 
 		f, err := os.Open(destfile)
 		if err != nil {
@@ -135,11 +140,13 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 		}
 		defer f.Close()
 		c.DownloadCache.Put(aID, f)
-
-		if err := fileutil.AtomicWriteFile(destfile, data, 0644); err != nil {
-			return destfile, nil, err
-		}
 	}
+
+	// actually write the file out to the system
+	if err := fileutil.AtomicWriteFile(destfile, data, 0644); err != nil {
+		return destfile, nil, err
+	}
+
 	// If provenance is requested, verify it.
 	ver := &provenance.Verification{}
 	cacheHit := false
@@ -153,12 +160,7 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 				if err == nil {
 					body = bytes.NewBuffer(data)
 					cacheHit = true
-					fmt.Fprintf(c.Out, "file has been read from cache")
-				} else {
-					fmt.Fprintf(c.Out, "File in cache found but could not be read, trying to get it from remote.")
 				}
-			} else {
-				fmt.Fprintf(c.Out, "File not found in provenance cache.")
 			}
 		}
 		if !cacheHit {
@@ -175,16 +177,21 @@ func (c *ChartDownloader) DownloadTo(ref, version, dest string) (string, *proven
 
 		if !cacheHit {
 			// write the provenance file to the provenance cache
-			tmp, err := ioutil.TempFile(os.TempDir(), "prov-")
+			tmpProvenanceFile, err := ioutil.TempFile(os.TempDir(), "prov-")
 			if err != nil {
 				fmt.Fprintf(c.Out, "Could not store temporary provenance file")
 			}
-			defer tmp.Close()
-			c.ProvenanceCache.Put(aID, tmp)
-			provfile := destfile + ".prov"
-			if err := fileutil.AtomicWriteFile(provfile, body, 0644); err != nil {
-				return destfile, nil, err
+			tmpProvenanceFile.WriteString(body.String())
+			tmpProvenanceFile.Close()
+			c.ProvenanceCache.Put(aID, tmpProvenanceFile)
+			err = os.Remove(tmpProvenanceFile.Name())
+			if err != nil {
+				fmt.Fprintf(c.Out, "Could not remove temporary provenance file")
 			}
+		}
+		provfile := destfile + ".prov"
+		if err := fileutil.AtomicWriteFile(provfile, body, 0644); err != nil {
+			return destfile, nil, err
 		}
 
 		if c.Verify != VerifyLater {
