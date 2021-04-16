@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/rancher-sandbox/gofilecache"
+
 	"helm.sh/helm/v3/internal/test/ensure"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/getter"
@@ -55,6 +57,16 @@ func TestResolveChartRef(t *testing.T) {
 		{name: "not found", ref: "nosuchthing/invalid-1.2.3", fail: true},
 	}
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		RepositoryConfig: repoConfig,
@@ -62,6 +74,8 @@ func TestResolveChartRef(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 	}
 
@@ -95,6 +109,16 @@ func TestResolveChartOpts(t *testing.T) {
 		},
 	}
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		RepositoryConfig: repoConfig,
@@ -102,6 +126,8 @@ func TestResolveChartOpts(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 	}
 
@@ -193,6 +219,16 @@ func TestDownloadTo(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		Verify:           VerifyAlways,
@@ -202,6 +238,8 @@ func TestDownloadTo(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 		Options: []getter.Option{
 			getter.WithBasicAuth("username", "password"),
@@ -246,6 +284,16 @@ func TestDownloadTo_TLS(t *testing.T) {
 	repoConfig := filepath.Join(srv.Root(), "repositories.yaml")
 	repoCache := srv.Root()
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		Verify:           VerifyAlways,
@@ -255,6 +303,8 @@ func TestDownloadTo_TLS(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 		Options: []getter.Option{},
 	}
@@ -295,6 +345,16 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		Verify:           VerifyLater,
@@ -303,6 +363,8 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 	}
 	cname := "/signtest-0.1.0.tgz"
@@ -324,6 +386,16 @@ func TestDownloadTo_VerifyLater(t *testing.T) {
 }
 
 func TestScanReposForURL(t *testing.T) {
+	downloadCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/helmtestcaches/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+
 	c := ChartDownloader{
 		Out:              os.Stderr,
 		Verify:           VerifyLater,
@@ -332,6 +404,8 @@ func TestScanReposForURL(t *testing.T) {
 		Getters: getter.All(&cli.EnvSettings{
 			RepositoryConfig: repoConfig,
 			RepositoryCache:  repoCache,
+			DownloadCache:    *gofilecache.InitCache(downloadCacheDir),
+			ProvenanceCache:  *gofilecache.InitCache(provenanceCacheDir),
 		}),
 	}
 
