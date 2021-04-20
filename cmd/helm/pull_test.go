@@ -32,6 +32,18 @@ func TestPullCmd(t *testing.T) {
 	}
 	defer srv.Stop()
 
+	downloadCacheDir, err := os.MkdirTemp("/tmp/", "download-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary download cache directory")
+	}
+	os.Setenv("HELM_DOWNLOAD_CACHE", downloadCacheDir)
+
+	provenanceCacheDir, err := os.MkdirTemp("/tmp/", "provenance-cache-")
+	if err != nil {
+		t.Errorf("Could not create temporary provenance cache directory")
+	}
+	os.Setenv("HELM_PROVENANCE_CACHE", provenanceCacheDir)
+
 	os.Setenv("HELM_EXPERIMENTAL_OCI", "1")
 	ociSrv, err := repotest.NewOCIServer(t, srv.Root())
 	if err != nil {
